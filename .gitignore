@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Perfil local con sesiones y cookies (CRÍTICO: No subir a GitHub por seguridad)
+.edge_rewards_profile/
+*.log
+
+# Archivos de build y temporales
+dist/
+scratch/
+assets/*.png
+!assets/sample_search.png
+
+# Variables de entorno privadas (NUNCA subir a GitHub)
+.env
+.env.local
+.env.*
+!.env.example
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
