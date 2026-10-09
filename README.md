@@ -9,9 +9,10 @@ Un bot de automatización inteligente (*RPA*) para completar de forma autónoma 
 - 🎯 **Conjunto Diario (Daily Set):** Detecta dinámicamente y completa las tarjetas del día en `/dashboard` con resolución automática de cuestionarios (*quizzes*) y encuestas.
 - 🎁 **Seguir Ganando:** Localiza y valida todas las tarjetas con insignias `+X` en `/earn`.
 - 📷 **Búsqueda Visual con Imagen (`#sb_sbi`):** Sube automáticamente una imagen para reclamar la bonificación de Bing Visual Search.
-- 🖥️ **Búsquedas de Escritorio con Rangos (Oro / Plata):** 
-  - 🥇 **Rango Oro (Nivel 2):** 20 búsquedas automáticas en Bing.
-  - 🥈 **Rango Plata (Nivel 1):** 10 búsquedas automáticas en Bing.
+- 🖥️ **Búsquedas con Auto-Detección de Nivel (Asociado Plata / Oro):** 
+  - 🏷️ **Detección Automática:** Lee la insignia oficial en pantalla (`Asociado Plata` o `Asociado Oro`).
+  - 🥇 **Asociado Oro (Nivel 2):** 20 búsquedas automáticas en Bing (+60 pts).
+  - 🥈 **Asociado Plata (Nivel 1):** 10 búsquedas automáticas en Bing (+30 pts).
 - ⏳ **Anti-Detección & Pausas Humanas:** Pausas aleatorias configurables entre 6 y 12 segundos con simulación de desplazamiento (*scroll*).
 - 🪟 **Arranque Instantáneo:** Cero cuelgues de inicio y sin ventanas congeladas en `about:blank`.
 - 🚪 **Cierre 100% Automático:** Cierra el navegador y la consola tras verificar que no quede ninguna tarea pendiente.
@@ -71,7 +72,7 @@ Puedes modificar las opciones directamente en tu archivo privado `.env`:
 | Variable en `.env` | Valor por Defecto | Descripción |
 | :--- | :--- | :--- |
 | `USER_DATA_DIR` | `.edge_rewards_profile` | Carpeta local privada para guardar cookies y sesión. |
-| `REWARDS_TIER` | `oro` | Rango de cuenta (`oro` = 20 búsquedas, `plata` = 10 búsquedas). |
+| `REWARDS_TIER` | `auto` | Detección automática por insignia (`auto`). Opcional forzar `oro` o `plata`. |
 | `SEARCHES_ORO` | `20` | Búsquedas para nivel Oro. |
 | `SEARCHES_PLATA` | `10` | Búsquedas para nivel Plata. |
 | `MIN_DELAY_MS` | `6000` | Tiempo mínimo de espera entre búsquedas (6s). |
