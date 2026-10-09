@@ -18,29 +18,95 @@ export class MissionBot {
     }
   }
 
-  // Detección con XPaths exactos del estado de nivel en Microsoft Rewards
+  // Detección automática del nivel leyendo la insignia oficial de Rewards ("Asociado Plata" o "Asociado Oro")
   async detectUserTier(): Promise<'oro' | 'plata'> {
+    // Si el usuario forzó explícitamente en su .env 'oro' o 'plata', respetarlo
+    if (config.userTier === 'oro' || config.userTier === 'plata') {
+      return config.userTier;
+    }
+
     try {
-      // 1. XPath exacto para Nivel 2 / Oro
-      const level2Element = await this.page.$(
-        'xpath=//*[contains(text(), "Nivel 2") or contains(text(), "Level 2") or contains(text(), "Nivel 2:") or contains(@aria-label, "Nivel 2") or contains(@aria-label, "Level 2") or contains(@title, "Nivel 2")]'
+      // Esperar brevemente a que cargue la interfaz
+      await sleep(1500);
+
+      // 1. Selector específico para la insignia de nivel moderna de Microsoft Rewards:
+      // <p class="rounded-ctrlBadgeCorner px-2 py-1 text-globalCaption1Strong text-rewardsLevelBadgeFg bg-rewardsSilverBadgeBg">Asociado Plata</p>
+      const badgeSelectors = [
+        'p.text-rewardsLevelBadgeFg',
+        'p[class*="rewardsLevelBadgeFg"]',
+        'p[class*="rewardsSilverBadgeBg"]',
+        'p[class*="rewardsGoldBadgeBg"]',
+        'p.rounded-ctrlBadgeCorner',
+        '.rounded-ctrlBadgeCorner'
+      ];
+
+      for (const sel of badgeSelectors) {
+        const badges = await this.page.$$(sel);
+        for (const badge of badges) {
+          const text = (await badge.innerText().catch(() => '')).toLowerCase().trim();
+          const attr = await badge.getAttribute('class').catch(() => '');
+          const className = (attr || '').toLowerCase();
+
+          // Comprobar si es Plata
+          if (text.includes('plata') || text.includes('silver') || className.includes('rewardssilverbadgebg')) {
+            console.log(`   🏷️ Insignia detectada: "${text}" ➔ Nivel PLATA`);
+            return 'plata';
+          }
+
+          // Comprobar si es Oro
+          if (text.includes('oro') || text.includes('gold') || className.includes('rewardsgoldbadgebg')) {
+            console.log(`   🏷️ Insignia detectada: "${text}" ➔ Nivel ORO`);
+            return 'oro';
+          }
+        }
+      }
+
+      // 2. XPath directo buscando el texto exacto proporcionado o clases
+      const silverBadge = await this.page.$(
+        'xpath=//p[contains(@class, "bg-rewardsSilverBadgeBg") or contains(@class, "text-rewardsLevelBadgeFg")][contains(text(), "Plata") or contains(text(), "Silver")] | //*[contains(text(), "Asociado Plata")] | //*[contains(text(), "Nivel 1")]'
       );
-      if (level2Element) {
+      if (silverBadge) {
+        const text = await silverBadge.innerText().catch(() => 'Asociado Plata');
+        console.log(`   🏷️ Insignia detectada por XPath: "${text.trim()}" ➔ Nivel PLATA`);
+        return 'plata';
+      }
+
+      const goldBadge = await this.page.$(
+        'xpath=//p[contains(@class, "bg-rewardsGoldBadgeBg") or contains(@class, "text-rewardsLevelBadgeFg")][contains(text(), "Oro") or contains(text(), "Gold")] | //*[contains(text(), "Asociado Oro")] | //*[contains(text(), "Nivel 2")]'
+      );
+      if (goldBadge) {
+        const text = await goldBadge.innerText().catch(() => 'Asociado Oro');
+        console.log(`   🏷️ Insignia detectada por XPath: "${text.trim()}" ➔ Nivel ORO`);
         return 'oro';
       }
 
-      // 2. XPath exacto para Nivel 1 / Plata
-      const level1Element = await this.page.$(
-        'xpath=//*[contains(text(), "Nivel 1") or contains(text(), "Level 1") or contains(text(), "Nivel 1:") or contains(@aria-label, "Nivel 1") or contains(@aria-label, "Level 1") or contains(@title, "Nivel 1")]'
-      );
-      if (level1Element) {
-        return 'plata';
+      // 3. Evaluación general en el DOM por si el elemento está anidado
+      const detectedInDOM = await this.page.evaluate(() => {
+        const allBadgeElements = Array.from(document.querySelectorAll('p, span, div'));
+        for (const el of allBadgeElements) {
+          const classStr = el.className?.toString().toLowerCase() || '';
+          const textStr = el.textContent?.toLowerCase().trim() || '';
+
+          if (classStr.includes('rewardssilverbadgebg') || textStr === 'asociado plata' || textStr.includes('nivel 1')) {
+            return 'plata';
+          }
+          if (classStr.includes('rewardsgoldbadgebg') || textStr === 'asociado oro' || textStr.includes('nivel 2')) {
+            return 'oro';
+          }
+        }
+        return null;
+      });
+
+      if (detectedInDOM) {
+        console.log(`   🏷️ Nivel detectado en DOM: Nivel ${detectedInDOM.toUpperCase()}`);
+        return detectedInDOM;
       }
-    } catch {
-      // En caso de error, usar la configuración
+    } catch (err: any) {
+      console.warn(`   ⚠️ Nota al detectar insignia de nivel:`, err.message);
     }
 
-    return config.userTier === 'plata' ? 'plata' : 'oro';
+    // Por defecto si no se detecta (10 búsquedas seguras para evitar penalización)
+    return 'plata';
   }
 
   async readCurrentPoints(): Promise<number | null> {

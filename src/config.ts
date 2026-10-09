@@ -17,7 +17,8 @@ export interface BotConfig {
   rewardsUrl: string;
 }
 
-const tier: UserTier = (process.env.REWARDS_TIER as UserTier) || 'oro';
+// Por defecto 'auto': lee dinámicamente la insignia de la página ("Asociado Plata" o "Asociado Oro")
+const tier: UserTier = (process.env.REWARDS_TIER as UserTier) || 'auto';
 const searchesOro = parseInt(process.env.SEARCHES_ORO || '20', 10);
 const searchesPlata = parseInt(process.env.SEARCHES_PLATA || '10', 10);
 

@@ -30,9 +30,17 @@ async function main() {
       console.log(`⭐ Puntos Iniciales: ${initialPoints.toLocaleString()} pts`);
     }
 
+    // Detección dinámica de la insignia ("Asociado Plata" vs "Asociado Oro")
     const detectedTier = await missionBot.detectUserTier();
-    const searchCount = detectedTier === 'oro' ? config.desktopSearchesOro : config.desktopSearchesPlata;
-    console.log(`🏅 Rango de Usuario: Nivel ${detectedTier.toUpperCase()} (${searchCount} búsquedas programadas)`);
+    let searchCount: number;
+
+    if (detectedTier === 'oro') {
+      searchCount = config.desktopSearchesOro; // 20 búsquedas
+      console.log(`🏅 Rango de Usuario: Nivel ORO (Asociado Oro) ➔ Ejecutando 20 búsquedas`);
+    } else {
+      searchCount = config.desktopSearchesPlata; // 10 búsquedas
+      console.log(`🥈 Rango de Usuario: Nivel PLATA (Asociado Plata) ➔ Ejecutando 10 búsquedas`);
+    }
 
     // 2. PASO 1: Conjunto Diario (Daily Set)
     await missionBot.runDailySet();
